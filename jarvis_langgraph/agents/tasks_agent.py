@@ -13,13 +13,34 @@ import json
 from pathlib import Path
 from langgraph.prebuilt import create_react_agent
 from functools import wraps
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.agents import create_tool_calling_agent, AgentExecutor
+from utils.groq_model import groq_model
 
 
 
 
 load_dotenv()
 
+# Get path to config.json relative to agent.py
+current_dir = Path(__file__).parent  # agents/ folder
+project_root = current_dir.parent    # your_project/ folder
+json_path = project_root / 'data' / 'tasks.json'
+
+# Load JSON data
+def load_json_tasks():
+    with open(json_path, 'r', encoding='utf-8') as file:
+        global tasks
+        tasks= json.load(file)
+
+def save_json_tasks():
+    with open(json_path, 'w', encoding='utf-8') as file:
+        json.dump(tasks, file, indent=2)
+    
+
 tasks: list[dict] = []
+
+load_json_tasks()
 
 def with_task_io(tool_func):
     """Decorator to load before and save after tool execution"""
@@ -107,33 +128,18 @@ def sort_tasks_by_deadline() -> str:
 
 task_tools = [add_task,delete_task,edit_task,mark_done,display_all_tasks,display_task,sort_tasks_by_deadline]
 
-taskModel =  ChatGroq(
-    groq_api_key=os.getenv("GROQ_API_KEY"),
-    model_name="meta-llama/llama-4-scout-17b-16e-instruct"
-)
+# taskModel =  ChatGroq(
+#     groq_api_key=os.getenv("GROQ_API_KEY"),
+#     model_name="meta-llama/llama-4-scout-17b-16e-instruct"
+# )
 
 
 
-# Get path to config.json relative to agent.py
-current_dir = Path(__file__).parent  # agents/ folder
-project_root = current_dir.parent    # your_project/ folder
-json_path = project_root / 'data' / 'tasks.json'
-
-# Load JSON data
-def load_json_tasks():
-    with open(json_path, 'r', encoding='utf-8') as file:
-        global tasks
-        tasks= json.load(file)
-
-def save_json_tasks():
-    with open(json_path, 'w', encoding='utf-8') as file:
-        json.dump(tasks, file, indent=2)
-    
 
 
 
-tasks_agent=create_react_agent(
-    model=taskModel,
+tasks_react_agent=create_react_agent(
+    model=groq_model,
     tools=task_tools,
     prompt=(
         "You are a Task Management Agent.\n\n"
@@ -150,68 +156,19 @@ tasks_agent=create_react_agent(
     ),
     name = "tasks_agent"
 )
+# Load existing tasks at startup
+load_json_tasks()
+
+
+def tasks_agent(state:AgentState)->AgentState:
+    output_state = tasks_react_agent.invoke(state)
+    state["messages"].append(output_state["messages"][-1])
+    state["is_last_step"] = True
+    state["remaining_steps"] = 0
+    return state
 
 
 
-
-
-
-
-# def should_continue_tasks(state: AgentState):
-#     messages = state["messages"]
-#     last_message = messages[-1]
-
-#     if isinstance(last_message, HumanMessage):
-#         content = last_message.content.lower()
-#         if any(exit_phrase in content for exit_phrase in [ "exit", "stop", "quit", "end"]):
-#             state['sel']= "chat"
-#             save_json_tasks()
-#             return "end"
-    
-#     # If AI made tool calls, keep looping through tools
-#     if isinstance(last_message, AIMessage) and last_message.tool_calls:
-#         return "continue"
-
-#     # If not explicitly ended and still interacting, continue
-#     return "continue"
-
-# # Create the tool-calling agent
-# prompt = ChatPromptTemplate.from_messages([
-#     ("system", "You are a helpful task assistant."),
-#     ("user", "{input}"),
-#      MessagesPlaceholder(variable_name="agent_scratchpad")
-# ])
-# task_llm_agent_core = create_tool_calling_agent(model, tools=task_tools,prompt=prompt)
-# task_agent_executor = AgentExecutor(agent=task_llm_agent_core, tools=task_tools, verbose=True)
-
-# # Step 3: Wrap agent logic in a node
-# def task_llm_agent(state: AgentState) -> AgentState:
-#     last_msg = state["messages"][-1]
-#     print(f"\n[🧠 LLM Agent Handling]: {last_msg.content}\n")
-    
-#     result = task_agent_executor.invoke({"input": last_msg.content})
-    
-#     state["messages"].append(AIMessage(content=result["output"]))
-#     return state
-
-# def task_input_handler(state: AgentState) -> AgentState:
-#     user_input = input("You (task): ")
-#     state["messages"].append(HumanMessage(content=user_input))
-#     return state
-
-
-
-    
-# def tasks_agent(state : AgentState) -> AgentState:
-#     """Handles the CRUD and display operations of the User"""
-#     state['sel'] = "tasks_agent"
-#     print(f"inside tasks agent")
-#     load_json_tasks()
-#     print(tasks)    
-    
-#     return state
-    
-    
 
 
     

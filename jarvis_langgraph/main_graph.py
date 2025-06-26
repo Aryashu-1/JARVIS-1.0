@@ -15,7 +15,7 @@ from agents.document_agent import document_agent
 from agents.email_agent import email_agent
 from agents.planner_agent import planner_agent
 from agents.reminder_agent import reminder_agent
-from agents.tasks_agent import tasks_agent
+from agents.tasks_agent import tasks_react_agent
 from agents.researcher_agent import research_agent
 from langchain_core.messages import AIMessage
 from IPython.display import Image, display
@@ -33,7 +33,7 @@ load_dotenv()
 # )
 supervisor = create_supervisor(
     model=groq_model,
-    agents=[research_agent, tasks_agent],
+    agents=[research_agent, tasks_react_agent],
     prompt=(
         "You are a supervisor managing two agents:\n"
         "- a research agent. Assign research-related tasks to this agent\n"

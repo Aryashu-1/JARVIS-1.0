@@ -1,6 +1,19 @@
 [
   {
+    "name": "send mail",
+    "task_description": "",
+    "deadline": "20 June",
+    "status": "Done"
+  },
+  {
+    "name": "send mail",
+    "task_description": "",
+    "deadline": "20 June",
+    "status": "Pending"
+  },
+  {
     "name": "Design brochure",
+    "task_description": "",
     "deadline": "2025-06-12",
     "status": "Pending"
   },
@@ -8,6 +21,30 @@
     "name": "write a letter",
     "task_description": "leave letter",
     "deadline": "tomorrow",
+    "status": "Done"
+  },
+  {
+    "name": "watch a movie",
+    "task_description": "new movie",
+    "deadline": "tonight",
+    "status": "Done"
+  },
+  {
+    "name": "watch a movie",
+    "task_description": "",
+    "deadline": "tonight",
+    "status": "Pending"
+  },
+  {
+    "name": "watch a movie",
+    "task_description": "",
+    "deadline": "tonight",
+    "status": "Pending"
+  },
+  {
+    "name": "new task",
+    "task_description": "task description",
+    "deadline": "2025-06-13",
     "status": "Pending"
   }
 ]
